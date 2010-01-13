@@ -47,7 +47,7 @@ class OAuthAccess(object):
         return self._obtain_setting("endpoints", "authorize")
     
     def _obtain_setting(self, k1, k2):
-        name = "OAUTH_CONSUMER_SETTINGS"
+        name = "OAUTH_ACCESS_SETTINGS"
         service = self.service
         try:
             return getattr(settings, name)[service][k1][k2]
