@@ -23,6 +23,7 @@ def oauth_callback(request, service):
         auth_token = access.check_token(unauth_token, request.GET)
         if auth_token:
             request.session["%s_token" % service] = str(auth_token)
+            # @@@ allow other and custom operations here
             return HttpResponseRedirect(reverse("import_contacts"))
         else:
             ctx.update({"error": "token_mismatch"})
