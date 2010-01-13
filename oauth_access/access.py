@@ -73,7 +73,8 @@ class OAuthAccess(object):
     
     def fetch_unauthorized_token(self):
         current_site = Site.objects.get(pk=settings.SITE_ID)
-        base_url = current_site.domain
+        # @@@ http fix
+        base_url = "http://%s" % (current_site.domain,)
         callback_url = reverse("oauth_access_callback", kwargs={
             "service": self.service,
         })
