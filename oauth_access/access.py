@@ -171,14 +171,13 @@ class OAuthAccess(object):
         # headers = {}
         # headers.update(request.to_header())
         # ret = http.request(request.url, request.method, headers=headers)
-        if request.method == "POST":
-            ret = http.request(request.http_url, "POST",
-                data = request.to_postdata(),
-            )
-        elif request.method == "GET":
-            ret = http.request(request.to_url(), "GET")
-        else:
-            raise NotImplementedError("unknown request method")
+        ret = http.request(request.to_url(), "GET")
+        #if request.method == "POST":
+        #    ret = http.request(request.url, "POST", request.to_postdata())
+        #elif request.method == "GET":
+        #    ret = http.request(request.to_url(), "GET")
+        #else:
+        #    raise NotImplementedError("unknown request method")
         response, content = ret
         logger.debug(repr(ret))
         return content
