@@ -175,6 +175,7 @@ class OAuthAccess(object):
             headers.update(request.to_header())
         else:
             url = request.to_url()
+        logger.debug(headers)
         ret = http.request(url, request.method, headers=headers)
         response, content = ret
         logger.debug(repr(ret))
