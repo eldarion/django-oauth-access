@@ -7,6 +7,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.utils import simplejson as json
 
+from django.contrib.sites.models import Site
+
 import oauth2 as oauth
 
 from oauth_access.utils.anyetree import etree
@@ -70,9 +72,11 @@ class OAuthAccess(object):
         return self._unauthorized_token
     
     def fetch_unauthorized_token(self):
-        # @@@ fixme
-        base_url = "http://contacts-import.pinaxproject.com"
-        callback_url = reverse("oauth_callback", kwargs={"service": self.service})
+        current_site = Site.objects.get(pk=settings.SITE_ID)
+        base_url = current_site.domain
+        callback_url = reverse("oauth_access_callback", kwargs={
+            "service": self.service,
+        })
         request = oauth.Request.from_consumer_and_token(self.consumer,
             http_url = self.request_token_url,
             http_method = "POST",
