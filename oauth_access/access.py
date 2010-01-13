@@ -164,10 +164,21 @@ class OAuthAccess(object):
     
     def _oauth_response(self, request):
         # @@@ not sure if this will work everywhere. need to explore more.
+        # some notes for future development:
+        # * LinkedIn seems to work best with headers
+        # * Yahoo works best with POST vars
         http = httplib2.Http()
-        headers = {}
-        headers.update(request.to_header())
-        ret = http.request(request.url, request.method, headers=headers)
+        # headers = {}
+        # headers.update(request.to_header())
+        # ret = http.request(request.url, request.method, headers=headers)
+        if request.method == "POST":
+            ret = http.request(request.http_url, "POST",
+                data = request.to_postdata(),
+            )
+        elif request.method == "GET":
+            ret = http.request(request.to_url(), "GET")
+        else:
+            raise NotImplementedError("unknown request method")
         response, content = ret
         logger.debug(repr(ret))
         return content
