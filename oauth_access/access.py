@@ -141,7 +141,9 @@ class OAuthAccess(object):
         if not response:
             raise ServiceFail()
         logger.debug(repr(response))
-        if kind == "json":
+        if kind == "raw":
+            return response
+        elif kind == "json":
             try:
                 return json.loads(response)
             except ValueError:
