@@ -128,19 +128,15 @@ class OAuthAccess(object):
         request.sign_request(self.signature_method, self.consumer, token)
         return request.to_url()
     
-    def make_api_call(self, kind, url, token, http_method="GET", **kwargs):
+    def make_api_call(self, kind, url, token, method="GET", **kwargs):
         if isinstance(token, basestring):
             token = oauth.Token.from_string(token)
-        response = self._oauth_response(
-            self._oauth_request(url, token,
-                http_method = http_method,
-                params = kwargs,
-            ),
-            api_call = True,
-        )
-        if not response:
-            raise ServiceFail()
-        logger.debug(repr(response))
+        client = oauth.Client(self.consumer, token=token)
+        response, content = client.request(url, method=method)
+        if not content:
+            raise ServiceFail("no content")
+        logger.debug("response: %r" % response)
+        logger.debug("content: %r" % content)
         if kind == "raw":
             return response
         elif kind == "json":
@@ -149,7 +145,7 @@ class OAuthAccess(object):
             except ValueError:
                 # @@@ might be better to return a uniform cannot parse
                 # exception and let caller determine if it is service fail
-                raise ServiceFail()
+                raise ServiceFail("JSON parse error")
         elif kind == "xml":
             return etree.fromstring(response)
         else:
