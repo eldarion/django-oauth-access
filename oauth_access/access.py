@@ -95,11 +95,10 @@ class OAuthAccess(object):
     
     def authorized_token(self, token, verifier=None):
         parameters = {}
-        # @@@ was needed for LinkedIn
-        #if verifier:
-        #    parameters.update({
-        #        "oauth_verifier": verifier,
-        #    })
+        if verifier:
+            parameters.update({
+                "oauth_verifier": verifier,
+            })
         request = oauth.Request.from_consumer_and_token(self.consumer,
             token = token,
             http_url = self.access_token_url,
