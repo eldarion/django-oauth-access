@@ -171,7 +171,7 @@ class OAuthAccess(object):
         # headers = {}
         # headers.update(request.to_header())
         # ret = http.request(request.url, request.method, headers=headers)
-        ret = http.request(request.to_url(), "GET")
+        ret = http.request(request.to_url(), "POST")
         #if request.method == "POST":
         #    ret = http.request(request.url, "POST", request.to_postdata())
         #elif request.method == "GET":
