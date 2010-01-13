@@ -138,16 +138,16 @@ class OAuthAccess(object):
         logger.debug("response: %r" % response)
         logger.debug("content: %r" % content)
         if kind == "raw":
-            return response
+            return content
         elif kind == "json":
             try:
-                return json.loads(response)
+                return json.loads(content)
             except ValueError:
                 # @@@ might be better to return a uniform cannot parse
                 # exception and let caller determine if it is service fail
                 raise ServiceFail("JSON parse error")
         elif kind == "xml":
-            return etree.fromstring(response)
+            return etree.fromstring(content)
         else:
             raise Exception("unsupported API kind")
     
