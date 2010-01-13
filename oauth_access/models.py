@@ -1,0 +1,1 @@
+# stub for various Django needs
