@@ -12,14 +12,14 @@ import oauth2 as oauth
 from oauth_access.utils.anyetree import etree
 
 
-logger = logging.getLogger("oauth_consumer")
+logger = logging.getLogger("oauth_access.access")
 
 
 class ServiceFail(Exception):
     pass
 
 
-class oAuthConsumer(object):
+class OAuthAccess(object):
     
     def __init__(self, service):
         self.service = service
