@@ -135,7 +135,8 @@ class OAuthAccess(object):
             self._oauth_request(url, token,
                 http_method = http_method,
                 params = kwargs,
-            )
+            ),
+            api_call = True,
         )
         if not response:
             raise ServiceFail()
@@ -162,22 +163,19 @@ class OAuthAccess(object):
         request.sign_request(self.signature_method, self.consumer, token)
         return request
     
-    def _oauth_response(self, request):
+    def _oauth_response(self, request, api_call=False):
         # @@@ not sure if this will work everywhere. need to explore more.
         # some notes for future development:
         # * LinkedIn seems to work best with headers
         # * Yahoo works best with POST vars
         http = httplib2.Http()
-        # headers = {}
-        # headers.update(request.to_header())
-        # ret = http.request(request.url, request.method, headers=headers)
-        ret = http.request(request.to_url(), "POST")
-        #if request.method == "POST":
-        #    ret = http.request(request.url, "POST", request.to_postdata())
-        #elif request.method == "GET":
-        #    ret = http.request(request.to_url(), "GET")
-        #else:
-        #    raise NotImplementedError("unknown request method")
+        headers = {}
+        if api_call:
+            url = request.url
+            headers.update(request.to_header())
+        else:
+            url = request.to_url()
+        ret = http.request(url, request.method, headers=headers)
         response, content = ret
         logger.debug(repr(ret))
         return content
