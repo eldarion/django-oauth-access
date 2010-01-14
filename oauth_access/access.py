@@ -12,6 +12,7 @@ from django.contrib.sites.models import Site
 import oauth2 as oauth
 
 from oauth_access.utils.anyetree import etree
+from oauth_access.utils.loader import load_path_attr
 
 
 logger = logging.getLogger("oauth_access.access")
@@ -118,6 +119,10 @@ class OAuthAccess(object):
             return self.authorized_token(token, verifier)
         else:
             return None
+    
+    def callback(self, request, token):
+        cb = load_path_attr(self._obtain_setting("endpoints", "callback"))
+        return cb(request, token)
     
     def authorization_url(self, token):
         request = oauth.Request.from_consumer_and_token(
