@@ -23,7 +23,7 @@ def oauth_callback(request, service):
     else:
         auth_token = access.check_token(unauth_token, request.GET)
         if auth_token:
-            return access.callback(request, auth_token)
+            return access.callback(request, access, auth_token)
         else:
             ctx.update({"error": "token_mismatch"})
     return render_to_response("oauth_access/oauth_error.html", ctx)

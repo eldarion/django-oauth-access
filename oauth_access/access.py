@@ -120,9 +120,9 @@ class OAuthAccess(object):
         else:
             return None
     
-    def callback(self, request, token):
+    def callback(self, *args, **kwargs):
         cb = load_path_attr(self._obtain_setting("endpoints", "callback"))
-        return cb(request, token)
+        return cb(*args, **kwargs)
     
     def authorization_url(self, token):
         request = oauth.Request.from_consumer_and_token(
