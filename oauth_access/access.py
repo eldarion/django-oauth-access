@@ -1,6 +1,7 @@
 import httplib2
 import logging
 import socket
+import urllib
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -79,16 +80,18 @@ class OAuthAccess(object):
         callback_url = reverse("oauth_access_callback", kwargs={
             "service": self.service,
         })
-        request = oauth.Request.from_consumer_and_token(self.consumer,
-            http_url = self.request_token_url,
-            http_method = "POST",
-            parameters = {
-                "oauth_callback": "%s%s" % (base_url, callback_url),
-            }
+        parameters = {
+            "oauth_callback": "%s%s" % (base_url, callback_url),
+        }
+        client = oauth.Client(self.consumer)
+        client.request(self.request_token_url,
+            method = "POST",
+            # parameters must be urlencoded (which are then re-decoded by
+            # and re-encoded by oauth2 -- seems lame)
+            body = urllib.urlencode(parameters),
         )
-        request.sign_request(self.signature_method, self.consumer, None)
         try:
-            return oauth.Token.from_string(self._oauth_response(request))
+            return oauth.Token.from_string(content)
         except KeyError, e:
             if e.args[0] == "oauth_token":
                 raise ServiceFail()
@@ -100,17 +103,14 @@ class OAuthAccess(object):
             parameters.update({
                 "oauth_verifier": verifier,
             })
-        request = oauth.Request.from_consumer_and_token(self.consumer,
-            token = token,
-            http_url = self.access_token_url,
-            http_method = "POST",
-            parameters = parameters,
+        client = oauth.Client(self.consumer, token=token)
+        response, content = client.request(self.access_token_url,
+            method = "POST",
+            # parameters must be urlencoded (which are then re-decoded by
+            # oauth2 -- seems lame)
+            body = urllib.urlencode(parameters),
         )
-        request.sign_request(self.signature_method, self.consumer, token)
-        try:
-            return oauth.Token.from_string(self._oauth_response(request))
-        except KeyError:
-            raise ServiceFail()
+        return oauth.Token.from_string(content)
     
     def check_token(self, unauth_token, parameters):
         token = oauth.Token.from_string(unauth_token)
@@ -155,31 +155,3 @@ class OAuthAccess(object):
             return etree.fromstring(content)
         else:
             raise Exception("unsupported API kind")
-    
-    def _oauth_request(self, url, token, http_method="GET", params=None):
-        request = oauth.Request.from_consumer_and_token(self.consumer,
-            token = token,
-            http_url = url,
-            parameters = params,
-            http_method = http_method,
-        )
-        request.sign_request(self.signature_method, self.consumer, token)
-        return request
-    
-    def _oauth_response(self, request, api_call=False):
-        # @@@ not sure if this will work everywhere. need to explore more.
-        # some notes for future development:
-        # * LinkedIn seems to work best with headers
-        # * Yahoo works best with POST vars
-        http = httplib2.Http()
-        headers = {}
-        if api_call:
-            url = request.url
-            headers.update(request.to_header())
-        else:
-            url = request.to_url()
-        logger.debug("%r , %r" % (url, headers))
-        ret = http.request(url, request.method, headers=headers)
-        response, content = ret
-        logger.debug(repr(ret))
-        return content
