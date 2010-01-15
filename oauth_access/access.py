@@ -12,6 +12,7 @@ from django.contrib.sites.models import Site
 
 import oauth2 as oauth
 
+from oauth_access.exceptions import NotAuthorized
 from oauth_access.utils.anyetree import etree
 from oauth_access.utils.loader import load_path_attr
 
@@ -138,6 +139,8 @@ class OAuthAccess(object):
             token = oauth.Token.from_string(token)
         client = oauth.Client(self.consumer, token=token)
         response, content = client.request(url, method=method, force_auth_header=True)
+        if response["status"] == "401":
+            raise NotAuthorized()
         if not content:
             raise ServiceFail("no content")
         logger.debug("response: %r" % response)
