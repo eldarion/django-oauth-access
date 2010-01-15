@@ -152,6 +152,6 @@ class OAuthAccess(object):
                 # exception and let caller determine if it is service fail
                 raise ServiceFail("JSON parse error")
         elif kind == "xml":
-            return etree.fromstring(content)
+            return etree.ElementTree(etree.fromstring(content))
         else:
             raise Exception("unsupported API kind")
