@@ -137,7 +137,7 @@ class OAuthAccess(object):
         if isinstance(token, basestring):
             token = oauth.Token.from_string(token)
         client = oauth.Client(self.consumer, token=token)
-        response, content = client.request(url, method=method, force_headers=True)
+        response, content = client.request(url, method=method, force_auth_header=True)
         if not content:
             raise ServiceFail("no content")
         logger.debug("response: %r" % response)
