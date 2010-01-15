@@ -84,7 +84,7 @@ class OAuthAccess(object):
             "oauth_callback": "%s%s" % (base_url, callback_url),
         }
         client = oauth.Client(self.consumer)
-        client.request(self.request_token_url,
+        response, content = client.request(self.request_token_url,
             method = "POST",
             # parameters must be urlencoded (which are then re-decoded by
             # and re-encoded by oauth2 -- seems lame)
