@@ -138,7 +138,10 @@ class OAuthAccess(object):
         if isinstance(token, basestring):
             token = oauth.Token.from_string(token)
         client = oauth.Client(self.consumer, token=token)
-        response, content = client.request(url, method=method, force_auth_header=True)
+        # @@@ LinkedIn required Authorization header which I modified oauth2 to
+        # take force_auth_header=True in client.request. Might need to subclass
+        # Client to get this to work with LinkedIn.
+        response, content = client.request(url, method=method)
         if response["status"] == "401":
             raise NotAuthorized()
         if not content:
