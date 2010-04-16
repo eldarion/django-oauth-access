@@ -13,6 +13,7 @@ setup(
     url = "http://github.com/eldarion/django-oauth-access",
     packages = [
         "oauth_access",
+        "oauth_access.utils",
     ],
     classifiers = [
         "Development Status :: 3 - Alpha",
