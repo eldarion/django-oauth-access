@@ -1,3 +1,5 @@
+import cgi
+import datetime
 import httplib2
 import logging
 import socket
@@ -12,7 +14,7 @@ from django.contrib.sites.models import Site
 
 import oauth2 as oauth
 
-from oauth_access.exceptions import NotAuthorized
+from oauth_access.exceptions import NotAuthorized, MissingToken
 from oauth_access.utils.anyetree import etree
 from oauth_access.utils.loader import load_path_attr
 
@@ -75,14 +77,8 @@ class OAuthAccess(object):
         return self._unauthorized_token
     
     def fetch_unauthorized_token(self):
-        current_site = Site.objects.get(pk=settings.SITE_ID)
-        # @@@ http fix
-        base_url = "http://%s" % (current_site.domain,)
-        callback_url = reverse("oauth_access_callback", kwargs={
-            "service": self.service,
-        })
         parameters = {
-            "oauth_callback": "%s%s" % (base_url, callback_url),
+            "oauth_callback": self.callback_url,
         }
         client = oauth.Client(self.consumer)
         response, content = client.request(self.request_token_url,
@@ -97,6 +93,16 @@ class OAuthAccess(object):
             if e.args[0] == "oauth_token":
                 raise ServiceFail()
             raise
+    
+    @property
+    def callback_url(self):
+        current_site = Site.objects.get(pk=settings.SITE_ID)
+        # @@@ http fix
+        base_url = "http://%s" % current_site.domain
+        callback_url = reverse("oauth_access_callback", kwargs={
+            "service": self.service,
+        })
+        return "%s%s" % (base_url, callback_url)
     
     def authorized_token(self, token, verifier=None):
         parameters = {}
@@ -114,33 +120,71 @@ class OAuthAccess(object):
         return oauth.Token.from_string(content)
     
     def check_token(self, unauth_token, parameters):
-        token = oauth.Token.from_string(unauth_token)
-        if token.key == parameters.get("oauth_token", "no_token"):
-            verifier = parameters.get("oauth_verifier")
-            return self.authorized_token(token, verifier)
+        if self.service != "facebook" and unauth_token is None:
+            raise MissingToken
+        if unauth_token:
+            token = oauth.Token.from_string(unauth_token)
+            if token.key == parameters.get("oauth_token", "no_token"):
+                verifier = parameters.get("oauth_verifier")
+                return self.authorized_token(token, verifier)
+            else:
+                return None
         else:
-            return None
+            code = parameters.get("code")
+            if code:
+                params = dict(
+                    client_id = self.key,
+                    redirect_uri = self.callback_url,
+                )
+                params["client_secret"] = self.secret
+                params["code"] = code
+                raw_data = urllib.urlopen(
+                    "%s?%s" % (
+                        self.access_token_url, urllib.urlencode(params)
+                    )
+                ).read()
+                response = cgi.parse_qs(raw_data)
+                return OAuth20Token(
+                    response["access_token"][-1],
+                    int(response["expires"][-1])
+                )
+            else:
+                # @@@ this error case is not nice
+                return None
     
     def callback(self, *args, **kwargs):
         cb = load_path_attr(self._obtain_setting("endpoints", "callback"))
         return cb(*args, **kwargs)
     
-    def authorization_url(self, token):
-        request = oauth.Request.from_consumer_and_token(
-            self.consumer,
-            token = token,
-            http_url = self.authorize_url,
-        )
-        request.sign_request(self.signature_method, self.consumer, token)
-        return request.to_url()
+    def authorization_url(self, token=None):
+        if token is None:
+            # OAuth 2.0
+            params = dict(
+                client_id = self.key,
+                redirect_uri = self.callback_url,
+            )
+            return self.authorize_url + "?%s" % urllib.urlencode(params)
+        else:
+            request = oauth.Request.from_consumer_and_token(
+                self.consumer,
+                token = token,
+                http_url = self.authorize_url,
+            )
+            request.sign_request(self.signature_method, self.consumer, token)
+            return request.to_url()
     
     def make_api_call(self, kind, url, token, method="GET", **kwargs):
-        if isinstance(token, basestring):
-            token = oauth.Token.from_string(token)
-        client = Client(self.consumer, token=token)
-        # @@@ LinkedIn requires Authorization header which is supported in
-        # sub-classed version of Client (originally from oauth2)
-        response, content = client.request(url, method=method, force_auth_header=True)
+        if isinstance(token, OAuth20Token):
+            url += "?%s" % urllib.urlencode(dict(access_token=str(token)))
+            http = httplib2.Http()
+            response, content = http.request(url, method=method)
+        else:
+            if isinstance(token, basestring):
+                token = oauth.Token.from_string(token)
+            client = Client(self.consumer, token=token)
+            # @@@ LinkedIn requires Authorization header which is supported in
+            # sub-classed version of Client (originally from oauth2)
+            response, content = client.request(url, method=method, force_auth_header=True)
         if response["status"] == "401":
             raise NotAuthorized()
         if not content:
@@ -213,3 +257,13 @@ class Client(oauth.Client):
         return httplib2.Http.request(self, uri, method=method, body=body,
             headers=headers, redirections=redirections,
             connection_type=connection_type)
+
+
+class OAuth20Token(object):
+    
+    def __init__(self, token, expires):
+        self.token = token
+        self.expires = datetime.datetime.now() + datetime.timedelta(seconds=expires)
+    
+    def __str__(self):
+        return str(self.token)
