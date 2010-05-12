@@ -15,6 +15,7 @@ from django.contrib.sites.models import Site
 import oauth2 as oauth
 
 from oauth_access.exceptions import NotAuthorized, MissingToken
+from oauth_access.models import UserAssociation
 from oauth_access.utils.anyetree import etree
 from oauth_access.utils.loader import load_path_attr
 
@@ -172,6 +173,35 @@ class OAuthAccess(object):
             )
             request.sign_request(self.signature_method, self.consumer, token)
             return request.to_url()
+    
+    def persist(self, user, token, identifier=None):
+        expires = hasattr(token, "expires") and token.expires or None
+        defaults = {
+            "token": str(token),
+            "expires": expires,
+        }
+        if identifier is not None:
+            defaults["identifier"] = identifier
+        assoc, created = UserAssociation.objects.get_or_create(
+            user = user,
+            service = self.service,
+            defaults = defaults,
+        )
+        if not created:
+            assoc.token = str(token)
+            assoc.expires = expires
+            assoc.save()
+    
+    def lookup_user(self, identifier):
+        queryset = UserAssociation.objects.all()
+        queryset = queryset.select_related("user")
+        queryset = queryset.filter(service=self.service)
+        try:
+            assoc = queryset.get(identifier=identifier)
+        except UserAssociation.DoesNotExist:
+            return None
+        else:
+            return assoc.user
     
     def make_api_call(self, kind, url, token, method="GET", **kwargs):
         if isinstance(token, OAuth20Token):
