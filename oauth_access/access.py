@@ -215,16 +215,27 @@ class OAuthAccess(object):
     
     def make_api_call(self, kind, url, token, method="GET", **kwargs):
         if isinstance(token, OAuth20Token):
-            url += "?%s" % urllib.urlencode(dict(access_token=str(token)))
+            request_kwargs = dict(method=method)
+            if method == "POST":
+                params = {
+                    "access_token": str(token),
+                }
+                params.update(kwargs["params"])
+                request_kwargs["body"] = urllib.urlencode(params)
+            else:
+                url += "?%s" % urllib.urlencode(dict(access_token=str(token)))
             http = httplib2.Http()
-            response, content = http.request(url, method=method)
+            response, content = http.request(url, **request_kwargs)
         else:
             if isinstance(token, basestring):
                 token = oauth.Token.from_string(token)
             client = Client(self.consumer, token=token)
             # @@@ LinkedIn requires Authorization header which is supported in
             # sub-classed version of Client (originally from oauth2)
-            response, content = client.request(url, method=method, force_auth_header=True)
+            request_kwargs = dict(method=method, force_auth_header=True)
+            if method == "POST":
+                request_kwargs["body"] = urllib.urlencode(kwargs["params"])
+            response, content = client.request(url, **request_kwargs)
         if response["status"] == "401":
             raise NotAuthorized()
         if not content:
