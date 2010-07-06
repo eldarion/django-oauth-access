@@ -312,9 +312,12 @@ class Client(oauth.Client):
 
 class OAuth20Token(object):
     
-    def __init__(self, token, expires):
+    def __init__(self, token, expires=None):
         self.token = token
-        self.expires = datetime.datetime.now() + datetime.timedelta(seconds=expires)
+        if expires is not None:
+            self.expires = datetime.datetime.now() + datetime.timedelta(seconds=expires)
+        else:
+            self.expires = None
     
     def __str__(self):
         return str(self.token)
