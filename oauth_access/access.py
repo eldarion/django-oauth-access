@@ -54,6 +54,13 @@ class OAuthAccess(object):
     def authorize_url(self):
         return self._obtain_setting("endpoints", "authorize")
     
+    @property
+    def provider_scope(self):
+        try:
+            return self._obtain_setting("endpoints", "provider_scope")
+        except KeyError:
+            return None
+    
     def _obtain_setting(self, k1, k2):
         name = "OAUTH_ACCESS_SETTINGS"
         service = self.service
@@ -164,6 +171,9 @@ class OAuthAccess(object):
                 client_id = self.key,
                 redirect_uri = self.callback_url,
             )
+            scope = self.provider_scope
+            if scope is not None:
+                params["scope"] = ",".join(scope)
             return self.authorize_url + "?%s" % urllib.urlencode(params)
         else:
             request = oauth.Request.from_consumer_and_token(
