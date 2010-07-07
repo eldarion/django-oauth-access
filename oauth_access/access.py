@@ -4,6 +4,7 @@ import httplib2
 import logging
 import socket
 import urllib
+import urlparse
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -275,7 +276,7 @@ class Client(oauth.Client):
         is_multipart = method == "POST" and headers.get("Content-Type", DEFAULT_CONTENT_TYPE) != DEFAULT_CONTENT_TYPE
         
         if body and method == "POST" and not is_multipart:
-            parameters = dict(parse_qsl(body))
+            parameters = dict(urlparse.parse_qsl(body))
         else:
             parameters = None
         
