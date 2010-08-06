@@ -102,15 +102,10 @@ class OAuthAccess(object):
         )
         if response["status"] != "200":
             raise UnknownResponse(
-                "Received a %s from service '%s':\n\n%s" % (
-                    response["status"], self.service, content
+                "Got %s from %s:\n\n%s" % (
+                    response["status"], self.request_token_url, content
                 ))
-        try:
-            return oauth.Token.from_string(content)
-        except KeyError, e:
-            if e.args[0] == "oauth_token":
-                raise ServiceFail()
-            raise
+        return oauth.Token.from_string(content)
     
     @property
     def callback_url(self):
@@ -135,6 +130,11 @@ class OAuthAccess(object):
             # oauth2 -- seems lame)
             body = urllib.urlencode(parameters),
         )
+        if response["status"] != "200":
+            raise UnknownResponse(
+                "Got %s from %s:\n\n%s" % (
+                    response["status"], self.access_token_url, content
+                ))
         return oauth.Token.from_string(content)
     
     def check_token(self, unauth_token, parameters):
