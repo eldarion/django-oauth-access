@@ -24,6 +24,10 @@ from oauth_access.utils.loader import load_path_attr
 logger = logging.getLogger("oauth_access.access")
 
 
+class UnknownResponse(Exception):
+    pass
+
+
 class ServiceFail(Exception):
     pass
 
