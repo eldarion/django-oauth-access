@@ -24,7 +24,7 @@ class Callback(object):
             user = request.user
         redirect_to = self.redirect_url(request)
         if user:
-            access.persist(user, token)
+            access.persist(user, token, identifier=self.identifier_from_data(user_data))
         return redirect(redirect_to)
     
     def fetch_user_data(self, request, access, token):

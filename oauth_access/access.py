@@ -210,6 +210,7 @@ class OAuthAccess(object):
         try:
             assoc = queryset.get(identifier=identifier)
         except UserAssociation.DoesNotExist:
+            print identifier
             return None
         else:
             return assoc.user
