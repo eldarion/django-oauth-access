@@ -9,6 +9,7 @@ class Callback(object):
     
     def __call__(self, request, access, token):
         if not request.user.is_authenticated():
+            authenticated = False
             user_data = self.fetch_user_data(request, access, token)
             user = self.lookup_user(request, access, user_data)
             if user is None:
@@ -21,10 +22,14 @@ class Callback(object):
             if isinstance(ret, HttpResponse):
                 return ret
         else:
+            authenticated = True
             user = request.user
         redirect_to = self.redirect_url(request)
         if user:
-            access.persist(user, token, identifier=self.identifier_from_data(user_data))
+            kwargs = {}
+            if not authenticated:
+                kwargs["identifier"] = self.identifier_from_data(user_data)
+            access.persist(user, token, **kwargs)
         return redirect(redirect_to)
     
     def fetch_user_data(self, request, access, token):
