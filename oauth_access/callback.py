@@ -1,7 +1,7 @@
 from django.shortcuts import redirect
 
 
-class LoginCallback(object):
+class AuthenticationCallback(object):
     
     def __call__(self, request, access, token):
         if not request.user.is_authenticated():
