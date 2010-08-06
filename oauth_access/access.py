@@ -102,7 +102,7 @@ class OAuthAccess(object):
         )
         if response["status"] != "200":
             raise UnknownResponse(
-                "Received a %s from service '%s':\n\n" % (
+                "Received a %s from service '%s':\n\n%s" % (
                     response["status"], self.service, content
                 ))
         try:
