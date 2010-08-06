@@ -96,6 +96,11 @@ class OAuthAccess(object):
             # and re-encoded by oauth2 -- seems lame)
             body = urllib.urlencode(parameters),
         )
+        if response["status"] != 200:
+            raise UnknownResponse(
+                "Received a %d from service '%s':\n\n" % (
+                    response["status"], self.service, content
+                ))
         try:
             return oauth.Token.from_string(content)
         except KeyError, e:
