@@ -161,9 +161,9 @@ class OAuthAccess(object):
                 # @@@ this error case is not nice
                 return None
     
-    def callback(self, *args, **kwargs):
-        cb = load_path_attr(self._obtain_setting("endpoints", "callback"))
-        return cb(*args, **kwargs)
+    @property
+    def callback(self):
+        return load_path_attr(self._obtain_setting("endpoints", "callback"))
     
     def authorization_url(self, token=None):
         if token is None:

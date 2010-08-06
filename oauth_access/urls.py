@@ -13,4 +13,9 @@ urlpatterns = patterns("",
         view = "oauth_access.views.oauth_callback",
         name = "oauth_access_callback"
     ),
+    url(
+        regex = r"^finish_signup/(?P<service>\w+)/$",
+        view = "oauth_access.views.finish_signup",
+        name = "oauth_access_finish_signup"
+    )
 )

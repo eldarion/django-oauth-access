@@ -35,3 +35,9 @@ def oauth_callback(request, service):
             # @@@ not nice for OAuth 2
             ctx.update({"error": "token_mismatch"})
     return render_to_response("oauth_access/oauth_error.html", ctx)
+
+
+def finish_signup(request, service):
+    access = OAuthAccess(service)
+    return access.callback.finish_signup(request, service)
+        
