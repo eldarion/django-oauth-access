@@ -1,0 +1,51 @@
+.. _ref-reference:
+
+=========
+Reference
+=========
+
+This document covers various components of idios.
+
+
+Settings
+========
+
+``AUTH_PROFILE_MODULE``
+-----------------------
+
+The site-specific user profile model used by this site. This setting is used
+by both Django and idios for similar purposes. Example:
+
+::
+
+    AUTH_PROFILE_MODULE = "myapp.Profile"
+
+The first part, ``myapp``, is an app on your ``sys.path``. The second part,
+``Profile``, is a model defined in ``models.py`` of ``myapp``.
+
+
+Modules
+=======
+
+
+``idios.urls``
+--------------
+
+
+``idios.utils``
+---------------
+
+.. module:: idios.utils
+
+.. autofunction:: get_profile_model
+.. autofunction:: get_profile_form
+
+
+``idios.views``
+---------------
+
+.. module:: idios.views
+
+.. autofunction:: profiles
+.. autofunction:: profile
+.. autofunction:: profile_edit
