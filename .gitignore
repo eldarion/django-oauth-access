@@ -1,3 +1,4 @@
 MANIFEST
 dist
 docs/_build/
+django_oauth_access.egg-info/
