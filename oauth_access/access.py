@@ -61,12 +61,9 @@ class OAuthAccess(object):
     
     @property
     def provider_scope(self):
-        try:
-            return self._obtain_setting("endpoints", "provider_scope")
-        except KeyError:
-            return None
+        return self._obtain_setting("endpoints", "provider_scope", False)
     
-    def _obtain_setting(self, k1, k2):
+    def _obtain_setting(self, k1, k2, required=True):
         name = "OAUTH_ACCESS_SETTINGS"
         service = self.service
         try:
@@ -77,6 +74,9 @@ class OAuthAccess(object):
             key = e.args[0]
             if key == service:
                 raise ImproperlyConfigured("%s must contain '%s'" % (name, service))
+            # check this here, because the service key should exist regardless
+            if not required:
+                return None
             elif key == k1:
                 raise ImproperlyConfigured("%s must contain '%s' for '%s'" % (name, k1, service))
             elif key == k2:
