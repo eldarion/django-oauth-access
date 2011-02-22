@@ -18,5 +18,9 @@ on Github is the best way for code inclusion.
 Before you send us a pull request please make sure you follow these
 contributing guidelines from Pinax:
 
- * `Committing code<http://pinaxproject.com/docs/dev/contributing/#committing-code>`_
- * `Coding style<http://pinaxproject.com/docs/dev/contributing/#coding-style>`_
+ * `Committing code`_
+ * `Coding style`_
+
+
+.. _Committing code: http://pinaxproject.com/docs/dev/contributing/#committing-code
+.. _Coding style: http://pinaxproject.com/docs/dev/contributing/#coding-style
