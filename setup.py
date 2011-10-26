@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name = "django-oauth-access",
-    version = "0.1.dev21",
+    version = "0.1.dev22",
     author = "Eldarion",
     author_email = "development@eldarion.com",
     description = "centralized oAuth access to oAuth providers in Django",
