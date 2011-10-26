@@ -32,7 +32,7 @@ def oauth_callback(request, service):
             return access.callback(request, access, auth_token)
         else:
             # @@@ not nice for OAuth 2
-            ctx.update({"error": "token_mismatch"})
+            ctx.update({"error": request.GET.get("error", "token_mismatch")})
     return render_to_response("oauth_access/oauth_error.html", ctx)
 
 
