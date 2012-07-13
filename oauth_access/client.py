@@ -29,6 +29,10 @@ KNOWN_SERVICE_ENDPOINTS = {
 }
 
 
+class ApiCallError(Exception):
+    pass
+
+
 class OAuthClient(object):
     
     def __init__(self, **kwargs):
@@ -124,7 +128,10 @@ class OAuthClient(object):
     def http_request(self, method, url, **kwargs):
         url = self.api_url + url
         kwargs["auth"] = OAuthClientAuth(self)
-        return requests.request(method, url, **kwargs)
+        response = requests.request(method, url, **kwargs)
+        if response.status_code != 200:
+            raise ApiCallError(response.content)
+        return response
 
 
 class RequestOAuthClient(OAuthClient):
