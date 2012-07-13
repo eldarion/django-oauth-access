@@ -33,6 +33,10 @@ class ApiCallError(Exception):
     pass
 
 
+class ApiCallNotAuthorized(Exception):
+    pass
+
+
 class OAuthClient(object):
     
     def __init__(self, **kwargs):
@@ -130,7 +134,9 @@ class OAuthClient(object):
         kwargs["auth"] = OAuthClientAuth(self)
         response = requests.request(method, url, **kwargs)
         if response.status_code != 200:
-            raise ApiCallError(response.content)
+            if response.status_code == 401:
+                raise ApiCallNotAuthorized()
+            raise ApiCallError("[%d]: %s" % (response.status_code, response.content))
         return response
 
 
