@@ -35,7 +35,14 @@ class Token(object):
     def link(self, key):
         if isinstance(key, models.Model):
             key = "model:%s:%s" % (str(key._meta), key.pk)
-        return LinkedToken.objects.get_or_create(
-            service=self.service, key=key,
-            defaults=dict(token=str(self))
-        )
+        lookup = dict(service=self.service, key=key)
+        tokens = LinkedToken.objects.select_for_update().filter(**lookup)
+        if tokens:
+            tokens.update(token=str(self))
+            token = tokens[0]
+        else:
+            params = {}
+            params.update(lookup)
+            params["token"] = str(self)
+            token = LinkedToken.objects.create(**params)
+        return token
