@@ -1,7 +1,6 @@
 from distutils.core import setup
 
 
-
 setup(
     name = "django-oauth-access",
     version = "1.0a1.dev1",
