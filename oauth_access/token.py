@@ -18,4 +18,4 @@ class Token(object):
         return urllib.urlencode(params)
     
     def link(self, key):
-        return LinkedToken.objects.create(key=key, token=str(self))
+        return LinkedToken.objects.get_or_create(key=key, defaults=dict(token=str(self)))
