@@ -5,7 +5,9 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 
 import requests
+import requests.auth
 
+import oauthlib.common
 import oauthlib.oauth1.rfc5849
 
 from .conf import settings
@@ -18,6 +20,7 @@ KNOWN_SERVICE_ENDPOINTS = {
         "request_token": u"https://api.twitter.com/oauth/request_token",
         "request_auth": u"https://api.twitter.com/oauth/authenticate",
         "access_token": u"https://api.twitter.com/oauth/access_token",
+        "api": u"https://api.twitter.com/1",
     },
     "yahoo": {
         "request_token": u"https://api.login.yahoo.com/oauth/v2/get_request_token",
@@ -28,9 +31,17 @@ KNOWN_SERVICE_ENDPOINTS = {
 
 class OAuthClient(object):
     
-    def __init__(self, service, token=None):
-        self.service = service
-        self.token = token
+    def __init__(self, **kwargs):
+        if "token" in kwargs:
+            self.token = kwargs["token"]
+            self.service = self.token.service
+        else:
+            try:
+                self.service = kwargs["service"]
+            except KeyError:
+                raise TypeError("OAuthClient.__init__ takes a service keyword argument")
+            else:
+                self.token = None
         self.client = self.build_client()
     
     @property
@@ -56,6 +67,10 @@ class OAuthClient(object):
     @property
     def access_token_url(self):
         return self._get_endpoint_url("access_token")
+    
+    @property
+    def api_url(self):
+        return self._get_endpoint_url("api")
     
     def _get_setting(self, k1, k2, required=True):
         name = "OAUTH_ACCESS_SETTINGS"
@@ -92,11 +107,12 @@ class OAuthClient(object):
             client_key=self.key,
             client_secret=self.secret,
         )
-        if self.callback_url:
-            kwargs["callback_uri"] = self.callback_url
         if self.token:
-            kwargs["resource_owner_key"] = token.key
-            kwargs["resource_owner_secret"] = token.secret
+            kwargs["resource_owner_key"] = self.token.key
+            kwargs["resource_owner_secret"] = self.token.secret
+        else:
+            if self.callback_url:
+                kwargs["callback_uri"] = self.callback_url
         kwargs.update(extra)
         return Client(**kwargs)
     
@@ -105,11 +121,10 @@ class OAuthClient(object):
             func = settings.OAUTH_ACCESS_CALLBACK
         return func(self, token)
     
-    def http_request(self, url):
-        # @@@ sign requires the body to build a signature. this is going to
-        # be problematic with requests (need to work out how to accomplish
-        # this for POST/PUT requests)
-        url, headers, body = self.client.sign(url)
+    def http_request(self, method, url, **kwargs):
+        url = self.api_url + url
+        kwargs["auth"] = OAuthClientAuth(self)
+        return requests.request(method, url, **kwargs)
 
 
 class RequestOAuthClient(OAuthClient):
@@ -185,4 +200,34 @@ class RequestOAuthClient(OAuthClient):
         # rebuild the client to enable HTTP requests to the service
         self.client = self.build_client()
         # create token from ourself
-        return Token(self.client.resource_owner_key, self.client.resource_owner_secret)
+        return Token(self.service, self.client.resource_owner_key, self.client.resource_owner_secret)
+
+
+class OAuthClientAuth(requests.auth.AuthBase):
+    """
+    requests authentication class to handle OAuth from oauth_access. Mostly
+    copied from requests.auth.
+    """
+    
+    def __init__(self, client):
+        self.client = client
+    
+    def __call__(self, r):
+        content_type = r.headers.get("Content-Type")
+        decoded_body = oauthlib.common.extract_params(r.data)
+        if content_type is None and decoded_body is not None:
+            if r.files:
+                r.headers["Content-Type"] = "mulitpart/form-encoded"
+                r.url, r.headers, _ = self.client.client.sign(
+                    unicode(r.full_url), unicode(r.method), None, r.headers
+                )
+            else:
+                r.headers["Content-Type"] = "application/x-www-form-urlencoded"
+                r.url, r.headers, r.data = self.client.client.sign(
+                    unicode(r.full_url), unicode(r.method), r.data, r.headers
+                )
+        if unicode("Authorization") in r.headers:
+            value = r.headers[unicode("Authorization")].encode("utf-8")
+            del r.headers[unicode("Authorization")]
+            r.headers["Authorization"] = value
+        return r
