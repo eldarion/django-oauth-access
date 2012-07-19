@@ -46,3 +46,7 @@ class Token(object):
             params["token"] = str(self)
             token = LinkedToken.objects.create(**params)
         return token
+    
+    def expired(self):
+        # @@@ implement
+        return False
