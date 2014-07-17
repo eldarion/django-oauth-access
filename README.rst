@@ -1,6 +1,22 @@
 django-oauth-access README
 ==========================
 
+.. image:: https://img.shields.io/travis/eldarion/django-oauth-access.svg
+    :target: https://travis-ci.org/eldarion/django-oauth-access
+
+.. image:: https://img.shields.io/coveralls/eldarion/django-oauth-access.svg
+    :target: https://coveralls.io/r/eldarion/django-oauth-access
+
+.. image:: https://img.shields.io/pypi/dm/django-oauth-access.svg
+    :target:  https://pypi.python.org/pypi/django-oauth-access/
+
+.. image:: https://img.shields.io/pypi/v/django-oauth-access.svg
+    :target:  https://pypi.python.org/pypi/django-oauth-access/
+
+.. image:: https://img.shields.io/badge/license-BSD-blue.svg
+    :target:  https://pypi.python.org/pypi/django-oauth-access/
+
+
 This app provides support for:
 
  * Twitter
