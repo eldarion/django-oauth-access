@@ -39,4 +39,3 @@ def oauth_callback(request, service):
 def finish_signup(request, service):
     access = OAuthAccess(service)
     return access.callback.finish_signup(request, service)
-        
