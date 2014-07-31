@@ -6,8 +6,7 @@ from oauth_access.access import OAuthAccess
 from oauth_access.exceptions import MissingToken
 
 
-def oauth_login(request, service,
-        redirect_field_name="next", redirect_to_session_key="redirect_to"):
+def oauth_login(request, service, redirect_field_name="next", redirect_to_session_key="redirect_to"):
     access = OAuthAccess(service)
     if not service == "facebook":
         token = access.unauthorized_token()

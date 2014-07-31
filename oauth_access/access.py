@@ -2,7 +2,6 @@ import cgi
 import datetime
 import httplib2
 import logging
-import socket
 import urllib
 import urlparse
 
@@ -94,11 +93,12 @@ class OAuthAccess(object):
             "oauth_callback": self.callback_url,
         }
         client = oauth.Client(self.consumer)
-        response, content = client.request(self.request_token_url,
-            method = "POST",
+        response, content = client.request(
+            self.request_token_url,
+            method="POST",
             # parameters must be urlencoded (which are then re-decoded by
             # and re-encoded by oauth2 -- seems lame)
-            body = urllib.urlencode(parameters),
+            body=urllib.urlencode(parameters),
         )
         if response["status"] != "200":
             raise UnknownResponse(
@@ -124,11 +124,12 @@ class OAuthAccess(object):
                 "oauth_verifier": verifier,
             })
         client = oauth.Client(self.consumer, token=token)
-        response, content = client.request(self.access_token_url,
-            method = "POST",
+        response, content = client.request(
+            self.access_token_url,
+            method="POST",
             # parameters must be urlencoded (which are then re-decoded by
             # oauth2 -- seems lame)
-            body = urllib.urlencode(parameters),
+            body=urllib.urlencode(parameters),
         )
         if response["status"] != "200":
             raise UnknownResponse(
@@ -151,8 +152,8 @@ class OAuthAccess(object):
             code = parameters.get("code")
             if code:
                 params = dict(
-                    client_id = self.key,
-                    redirect_uri = self.callback_url,
+                    client_id=self.key,
+                    redirect_uri=self.callback_url,
                 )
                 params["client_secret"] = self.secret
                 params["code"] = code
@@ -178,8 +179,8 @@ class OAuthAccess(object):
         if token is None:
             # OAuth 2.0
             params = dict(
-                client_id = self.key,
-                redirect_uri = self.callback_url,
+                client_id=self.key,
+                redirect_uri=self.callback_url,
             )
             scope = self.provider_scope
             if scope is not None:
@@ -188,8 +189,8 @@ class OAuthAccess(object):
         else:
             request = oauth.Request.from_consumer_and_token(
                 self.consumer,
-                token = token,
-                http_url = self.authorize_url,
+                token=token,
+                http_url=self.authorize_url,
             )
             request.sign_request(self.signature_method, self.consumer, token)
             return request.to_url()
@@ -203,9 +204,9 @@ class OAuthAccess(object):
         if identifier is not None:
             defaults["identifier"] = identifier
         assoc, created = UserAssociation.objects.get_or_create(
-            user = user,
-            service = self.service,
-            defaults = defaults,
+            user=user,
+            service=self.service,
+            defaults=defaults,
         )
         if not created:
             assoc.token = str(token)
@@ -273,9 +274,11 @@ class Client(oauth.Client):
     by LinkedIn). See http://github.com/brosner/python-oauth2/commit/82a05f96878f187f67c1af44befc1bec562e5c1f
     """
 
-    def request(self, uri, method="GET", body=None, headers=None,
-      redirections=httplib2.DEFAULT_MAX_REDIRECTS, connection_type=None,
-      force_auth_header=False):
+    def request(
+        self, uri, method="GET", body=None, headers=None,
+        redirections=httplib2.DEFAULT_MAX_REDIRECTS, connection_type=None,
+        force_auth_header=False
+    ):
 
         DEFAULT_CONTENT_TYPE = "application/x-www-form-urlencoded"
 
@@ -289,9 +292,11 @@ class Client(oauth.Client):
         else:
             parameters = None
 
-        req = oauth.Request.from_consumer_and_token(self.consumer,
+        req = oauth.Request.from_consumer_and_token(
+            self.consumer,
             token=self.token, http_method=method, http_url=uri,
-            parameters=parameters)
+            parameters=parameters
+        )
 
         req.sign_request(self.method, self.consumer, self.token)
 
@@ -315,9 +320,11 @@ class Client(oauth.Client):
                 # don't call update twice.
                 headers.update(req.to_header())
 
-        return httplib2.Http.request(self, uri, method=method, body=body,
+        return httplib2.Http.request(
+            self, uri, method=method, body=body,
             headers=headers, redirections=redirections,
-            connection_type=connection_type)
+            connection_type=connection_type
+        )
 
 
 class OAuth20Token(object):
